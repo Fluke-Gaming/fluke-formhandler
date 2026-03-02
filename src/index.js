@@ -17,7 +17,21 @@ export default {
     let emailStatus = "not attempted";
 
     try {
-      const signup = await req.json();
+      let signup;
+
+      const contentType = req.headers.get("content-type") || "";
+
+      if (contentType.includes("application/json")) {
+        signup = await req.json();
+      } else if (contentType.includes("multipart/form-data")) {
+        const formData = await req.formData();
+        signup = Object.fromEntries(formData.entries());
+      } else {
+        return corsResponse(
+          JSON.stringify({ error: "Unsupported Content-Type" }),
+          req, 415
+        );
+      }
 
       const now = new Date();
       const timestamp = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
